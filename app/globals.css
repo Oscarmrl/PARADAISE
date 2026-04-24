@@ -1,26 +1,131 @@
 @import "tailwindcss";
 
+/* Dark mode: class-based */
+@variant dark (&:where(.dark, .dark *));
+
+/* ── Light theme (default) ── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg:       #faf7f4;
+  --surface:  #ffffff;
+  --fg:       #1a1a1a;
+  --fg-muted: #9c8a7a;
+  --border:   #e0d0c0;
+  --beige:    #f0e9e1;
+  --sand:     #c9b9a8;
+
+  --color-cream:      #faf7f4;
+  --color-beige:      #f0e9e1;
+  --color-beige-dark: #e0d0c0;
+  --color-sand:       #c9b9a8;
+  --color-espresso:   #2d1f14;
+  --color-charcoal:   #1a1a1a;
+  --color-sale:       #c0392b;
+
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body:    "Inter", system-ui, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ── Dark theme ── */
+.dark {
+  --bg:       #111111;
+  --surface:  #1c1c1c;
+  --fg:       #f0ece7;
+  --fg-muted: #7a6a5e;
+  --border:   #2a2a2a;
+  --beige:    #1f1f1f;
+  --sand:     #6b5a4e;
+
+  --color-cream:      #111111;
+  --color-beige:      #1f1f1f;
+  --color-beige-dark: #2a2a2a;
+  --color-sand:       #6b5a4e;
+  --color-charcoal:   #f0ece7;
+  --color-espresso:   #e0d0c0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+  background-color: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+}
+
+/* ── Admin inputs ── */
+.admin-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  outline: none;
+  background-color: var(--surface);
+  color: var(--fg);
+  transition: border-color 0.2s;
+  border-radius: 2px;
+}
+.admin-input::placeholder { color: var(--fg-muted); }
+.admin-input:focus { border-color: var(--fg); }
+.admin-input option {
+  background-color: var(--surface);
+  color: var(--fg);
+}
+.admin-checkbox { accent-color: var(--fg); width: 1rem; height: 1rem; cursor: pointer; }
+
+.admin-row { border-bottom: 1px solid var(--border); transition: background-color 0.15s; }
+.admin-row:hover { background-color: var(--beige); }
+
+/* ── Botones reutilizables ── */
+
+/* Botón sólido: se invierte con el tema */
+.btn-solid {
+  display: inline-block;
+  background-color: var(--fg);
+  color: var(--bg);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.6rem 2rem;
+  transition: opacity 0.2s ease;
+}
+.btn-solid:hover { opacity: 0.7; }
+
+/* Botón outline: borde + texto del tema */
+.btn-outline {
+  display: inline-block;
+  background-color: transparent;
+  color: var(--fg);
+  border: 1px solid var(--fg);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.6rem 2rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.btn-outline:hover {
+  background-color: var(--fg);
+  color: var(--bg);
+}
+
+/* Botón héroe: siempre blanco sobre foto oscura */
+.btn-hero {
+  display: inline-block;
+  background-color: #ffffff;
+  color: #1a1a1a;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.75rem 2rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.btn-hero:hover {
+  background-color: #1a1a1a;
+  color: #ffffff;
 }
