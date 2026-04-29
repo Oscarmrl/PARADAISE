@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useCartStore } from "@/store/cart";
 import { useTheme } from "./ThemeProvider";
 import SearchBar from "./SearchBar";
@@ -8,14 +9,15 @@ import SearchBar from "./SearchBar";
 const navLinks = [
   { label: "Inicio", href: "/" },
   { label: "Colecciones", href: "/productos" },
-  { label: "Nosotros", href: "/#nosotros" },
-  { label: "Contacto", href: "/#contacto" },
+  { label: "Ofertas", href: "/ofertas" },
 ];
 
 export default function Navbar() {
   const totalItems = useCartStore((s) => s.totalItems);
   const openCart = useCartStore((s) => s.openCart);
   const { theme, toggle } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   return (
     <header
@@ -34,7 +36,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-xs tracking-widest uppercase transition-opacity hover:opacity-60"
+                className="text-sm tracking-widest uppercase transition-opacity hover:opacity-60"
                 style={{ color: "var(--fg)" }}
               >
                 {link.label}
@@ -95,7 +97,7 @@ export default function Navbar() {
               <line x1="3" y1="6" x2="21" y2="6"/>
               <path d="M16 10a4 4 0 0 1-8 0"/>
             </svg>
-            {totalItems() > 0 && (
+            {mounted && totalItems() > 0 && (
               <span
                 className="absolute -top-1 -right-1 text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-medium"
                 style={{ backgroundColor: "var(--fg)", color: "var(--bg)" }}

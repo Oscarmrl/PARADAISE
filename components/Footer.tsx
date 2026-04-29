@@ -7,8 +7,7 @@ const whatsapp = "50496212458";
 const navLinks = [
   { label: "Inicio", href: "/" },
   { label: "Colecciones", href: "/productos" },
-  { label: "Nosotros", href: "/#nosotros" },
-  { label: "Contacto", href: "/#contacto" },
+  { label: "Ofertas", href: "/ofertas" },
 ];
 
 const collections = [

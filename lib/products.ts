@@ -13,6 +13,7 @@ export interface Product {
   slug: string;
   description: string | null;
   price: number;
+  offer_price: number | null;
   category_id: number | null;
   category_name?: string;
   images: string[];
@@ -31,10 +32,31 @@ export async function getCategories(): Promise<Category[]> {
   return rows;
 }
 
+export async function createCategory(
+  data: Omit<Category, "id">
+): Promise<Category> {
+  const { rows } = await pool.query<Category>(
+    `INSERT INTO categories (name, slug, image_url)
+     VALUES ($1, $2, $3)
+     RETURNING *`,
+    [data.name, data.slug, data.image_url ?? null]
+  );
+  return rows[0];
+}
+
+export async function deleteCategory(id: number): Promise<boolean> {
+  const { rowCount } = await pool.query(
+    "DELETE FROM categories WHERE id = $1",
+    [id]
+  );
+  return (rowCount ?? 0) > 0;
+}
+
 export async function getProducts(opts?: {
   search?: string;
   categorySlug?: string;
   featured?: boolean;
+  onSale?: boolean;
   limit?: number;
 }): Promise<Product[]> {
   const conditions: string[] = [];
@@ -52,6 +74,9 @@ export async function getProducts(opts?: {
   if (opts?.featured !== undefined) {
     conditions.push(`p.is_featured = $${i++}`);
     values.push(opts.featured);
+  }
+  if (opts?.onSale) {
+    conditions.push(`p.is_sale = true`);
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -85,14 +110,15 @@ export async function createProduct(
 ): Promise<Product> {
   const { rows } = await pool.query<Product>(
     `INSERT INTO products
-       (name, slug, description, price, category_id, images, colors, sizes, is_featured, is_sale)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+       (name, slug, description, price, offer_price, category_id, images, colors, sizes, is_featured, is_sale)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
      RETURNING *`,
     [
       data.name,
       data.slug,
       data.description,
       data.price,
+      data.offer_price ?? null,
       data.category_id,
       data.images,
       data.colors,

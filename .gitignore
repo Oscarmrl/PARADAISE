@@ -41,4 +41,4 @@ yarn-error.log*
 next-env.d.ts
 .md*
 seed.sql
-
+*.sql

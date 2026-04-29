@@ -6,12 +6,14 @@ export async function GET(req: NextRequest) {
   const search = searchParams.get("q") ?? undefined;
   const category = searchParams.get("categoria") ?? undefined;
   const featured = searchParams.get("destacados");
+  const ofertas = searchParams.get("ofertas");
 
   try {
     const products = await getProducts({
       search,
       categorySlug: category,
       featured: featured === "1" ? true : undefined,
+      onSale: ofertas === "1" ? true : undefined,
     });
     return Response.json(products);
   } catch {

@@ -25,10 +25,11 @@ export default function ProductCard({ product, compact = false }: Props) {
           fill
           className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
           sizes={compact ? "280px" : "(max-width: 768px) 50vw, 33vw"}
+
         />
         {product.is_sale && (
-          <span className="absolute top-2 left-2 bg-[--color-sale] text-white text-[9px] tracking-widest uppercase px-2 py-0.5">
-            Sale
+          <span className="absolute top-2 left-2 text-white text-[9px] tracking-widest uppercase px-2 py-0.5" style={{ backgroundColor: "#dc2626" }}>
+            Oferta
           </span>
         )}
       </div>
@@ -45,9 +46,20 @@ export default function ProductCard({ product, compact = false }: Props) {
             {product.category_name ?? ""}
           </p>
         )}
-        <p className={`text-[--color-charcoal]/80 ${compact ? "text-xs" : "text-sm"}`}>
-          ${Number(product.price).toFixed(2)}
-        </p>
+        {product.is_sale && product.offer_price ? (
+          <div className={`flex items-center gap-2 flex-wrap ${compact ? "justify-center" : ""}`}>
+            <span className={`font-medium ${compact ? "text-xs" : "text-sm"}`} style={{ color: "#dc2626" }}>
+              ${Number(product.offer_price).toFixed(2)}
+            </span>
+            <span className={`line-through ${compact ? "text-[10px]" : "text-xs"}`} style={{ color: "var(--fg-muted)" }}>
+              ${Number(product.price).toFixed(2)}
+            </span>
+          </div>
+        ) : (
+          <p className={`text-[--color-charcoal]/80 ${compact ? "text-xs" : "text-sm"}`}>
+            ${Number(product.price).toFixed(2)}
+          </p>
+        )}
       </div>
     </Link>
   );
