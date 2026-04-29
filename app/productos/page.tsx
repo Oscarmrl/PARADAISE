@@ -2,6 +2,8 @@ import { getProducts, getCategories } from "@/lib/products";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   searchParams: Promise<{ q?: string; categoria?: string }>;
 }

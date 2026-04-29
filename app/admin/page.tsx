@@ -1,9 +1,16 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { ref, deleteObject } from "firebase/storage";
+import { signOut } from "firebase/auth";
+import { storage, auth } from "@/lib/firebase";
 import PasswordGate from "@/components/admin/PasswordGate";
 import ProductForm from "@/components/admin/ProductForm";
 import type { Product, Category } from "@/lib/products";
+
+function slugify(t: string) {
+  return t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
 
 export default function AdminPage() {
   const [token, setToken]           = useState<string | null>(null);
@@ -11,6 +18,12 @@ export default function AdminPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [editing, setEditing]       = useState<Product | null | "new">(null);
   const [loading, setLoading]       = useState(false);
+
+  const [catName, setCatName]   = useState("");
+  const [catSlug, setCatSlug]   = useState("");
+  const [catSaving, setCatSaving] = useState(false);
+  const [catError, setCatError] = useState("");
+  const [showCats, setShowCats] = useState(false);
 
   useEffect(() => {
     const saved = sessionStorage.getItem("admin_token");
@@ -33,7 +46,50 @@ export default function AdminPage() {
 
   async function handleDelete(id: number) {
     if (!confirm("¿Eliminar este producto?")) return;
+
+    const product = products.find((p) => p.id === id);
+
     await fetch(`/api/productos/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+
+    if (product?.images?.length) {
+      await Promise.allSettled(
+        product.images.map(async (url) => {
+          try {
+            await deleteObject(ref(storage, url));
+          } catch {
+            // Imagen ya inexistente en Storage, se ignora
+          }
+        })
+      );
+    }
+
+    loadData();
+  }
+
+  async function handleCreateCategory(e: React.FormEvent) {
+    e.preventDefault();
+    setCatSaving(true);
+    setCatError("");
+    try {
+      const res = await fetch("/api/categorias", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name: catName, slug: catSlug || slugify(catName), image_url: null }),
+      });
+      if (!res.ok) throw new Error("Error al crear categoría");
+      setCatName("");
+      setCatSlug("");
+      loadData();
+    } catch (err) {
+      setCatError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setCatSaving(false);
+    }
+  }
+
+  async function handleDeleteCategory(id: number, name: string) {
+    if (!confirm(`¿Eliminar la categoría "${name}"? Los productos asociados quedarán sin categoría.`)) return;
+    await fetch(`/api/categorias?id=${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
     loadData();
   }
 
@@ -52,12 +108,15 @@ export default function AdminPage() {
             PARADISE — Gestión de productos
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           <button onClick={() => setEditing("new")} className="btn-solid px-5 py-2.5 text-xs">
-            + Nuevo
+            + Producto
+          </button>
+          <button onClick={() => setShowCats((v) => !v)} className="btn-outline px-5 py-2.5 text-xs">
+            Categorías
           </button>
           <button
-            onClick={() => { sessionStorage.removeItem("admin_token"); setToken(null); }}
+            onClick={() => { sessionStorage.removeItem("admin_token"); signOut(auth); setToken(null); }}
             className="btn-outline px-5 py-2.5 text-xs"
           >
             Salir
@@ -106,6 +165,79 @@ export default function AdminPage() {
               />
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── Sección Categorías ── */}
+      {showCats && (
+        <div
+          className="mb-8 rounded-sm p-5 space-y-5"
+          style={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <h2 className="font-[--font-display] text-xl font-light" style={{ color: "var(--fg)" }}>
+            Categorías
+          </h2>
+
+          {/* Lista de categorías existentes */}
+          <div className="space-y-2">
+            {categories.length === 0 ? (
+              <p className="text-sm" style={{ color: "var(--fg-muted)" }}>No hay categorías aún.</p>
+            ) : (
+              categories.map((c) => (
+                <div
+                  key={c.id}
+                  className="flex items-center justify-between px-4 py-2.5 rounded-sm"
+                  style={{ backgroundColor: "var(--beige)", border: "1px solid var(--border)" }}
+                >
+                  <div>
+                    <span className="text-sm font-medium" style={{ color: "var(--fg)" }}>{c.name}</span>
+                    <span className="ml-2 text-xs" style={{ color: "var(--fg-muted)" }}>/{c.slug}</span>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteCategory(c.id, c.name)}
+                    className="text-xs hover:opacity-70 transition-opacity"
+                    style={{ color: "#c0392b" }}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Formulario nueva categoría */}
+          <form onSubmit={handleCreateCategory} className="space-y-3" style={{ borderTop: "1px solid var(--border)", paddingTop: "1.25rem" }}>
+            <p className="text-xs tracking-widest uppercase font-medium" style={{ color: "var(--fg-muted)" }}>
+              Nueva categoría
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <input
+                  value={catName}
+                  onChange={(e) => { setCatName(e.target.value); setCatSlug(slugify(e.target.value)); }}
+                  required
+                  className="admin-input"
+                  placeholder="Nombre (ej. Pantalones)"
+                />
+              </div>
+              <div>
+                <input
+                  value={catSlug}
+                  onChange={(e) => setCatSlug(e.target.value)}
+                  className="admin-input"
+                  placeholder="Slug (ej. pantalones)"
+                />
+              </div>
+            </div>
+            {catError && (
+              <p className="text-xs px-3 py-2 rounded-sm" style={{ color: "#c0392b", backgroundColor: "#fee2e2" }}>
+                {catError}
+              </p>
+            )}
+            <button type="submit" disabled={catSaving} className="btn-solid px-6 py-2.5 disabled:opacity-50">
+              {catSaving ? "Guardando..." : "+ Crear categoría"}
+            </button>
+          </form>
         </div>
       )}
 

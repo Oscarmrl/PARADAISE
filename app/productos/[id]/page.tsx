@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import AddToCartSection from "./AddToCartSection";
 import Image from "next/image";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }
