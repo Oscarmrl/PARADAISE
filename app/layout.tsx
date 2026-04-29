@@ -29,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${cormorant.variable} ${inter.variable}`}>
+    <html lang="es" className={`${cormorant.variable} ${inter.variable}`} suppressHydrationWarning>
       <body className="min-h-screen flex flex-col bg-[--color-cream]">
         <ThemeProvider>
           <Navbar />
