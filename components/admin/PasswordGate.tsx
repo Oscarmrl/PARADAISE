@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 interface Props {
   onSuccess: (token: string) => void;
@@ -23,6 +25,8 @@ export default function PasswordGate({ onSuccess }: Props) {
       });
       const data = await res.json();
       if (data.ok) {
+        const email = process.env.NEXT_PUBLIC_FIREBASE_ADMIN_EMAIL!;
+        await signInWithEmailAndPassword(auth, email, password);
         sessionStorage.setItem("admin_token", data.token);
         onSuccess(data.token);
       } else {

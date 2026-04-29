@@ -45,7 +45,7 @@
 
 * { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; font-size: 17px; }
 
 body {
   font-family: var(--font-body);
@@ -89,7 +89,7 @@ h1, h2, h3, h4 {
   display: inline-block;
   background-color: var(--fg);
   color: var(--bg);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   padding: 0.6rem 2rem;
@@ -103,7 +103,7 @@ h1, h2, h3, h4 {
   background-color: transparent;
   color: var(--fg);
   border: 1px solid var(--fg);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   padding: 0.6rem 2rem;
@@ -119,7 +119,7 @@ h1, h2, h3, h4 {
   display: inline-block;
   background-color: #ffffff;
   color: #1a1a1a;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   padding: 0.75rem 2rem;
