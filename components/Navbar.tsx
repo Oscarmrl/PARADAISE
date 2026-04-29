@@ -27,16 +27,16 @@ export default function Navbar() {
         borderBottom: "1px solid var(--border)",
       }}
     >
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 lg:px-6 h-16 flex items-center justify-between">
 
         {/* Left: nav links + search icon */}
-        <div className="flex items-center gap-5">
-          <nav className="hidden md:flex items-center gap-6">
+        <div className="flex items-center gap-3 lg:gap-5">
+          <nav className="hidden md:flex items-center gap-3 lg:gap-6">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm tracking-widest uppercase transition-opacity hover:opacity-60"
+                className="text-xs lg:text-sm tracking-wide lg:tracking-widest uppercase transition-opacity hover:opacity-60 whitespace-nowrap"
                 style={{ color: "var(--fg)" }}
               >
                 {link.label}

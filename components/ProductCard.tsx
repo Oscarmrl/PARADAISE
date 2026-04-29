@@ -33,10 +33,10 @@ export default function ProductCard({ product, compact = false }: Props) {
           </span>
         )}
       </div>
-      <div className={`mt-2 space-y-0.5 ${compact ? "text-center" : ""}`}>
+      <div className={`mt-3 space-y-1 ${compact ? "text-center" : ""}`}>
         <h3
-          className={`font-[--font-display] font-light text-[--color-charcoal] group-hover:opacity-60 transition-opacity ${
-            compact ? "text-base" : "text-lg"
+          className={`font-[--font-display] font-light text-[--color-charcoal] group-hover:opacity-60 transition-opacity leading-snug ${
+            compact ? "text-sm" : "text-base lg:text-lg"
           }`}
         >
           {product.name}
@@ -48,10 +48,10 @@ export default function ProductCard({ product, compact = false }: Props) {
         )}
         {product.is_sale && product.offer_price ? (
           <div className={`flex items-center gap-2 flex-wrap ${compact ? "justify-center" : ""}`}>
-            <span className={`font-medium ${compact ? "text-xs" : "text-sm"}`} style={{ color: "#dc2626" }}>
+            <span className="text-sm font-medium" style={{ color: "#dc2626" }}>
               ${Number(product.offer_price).toFixed(2)}
             </span>
-            <span className={`line-through ${compact ? "text-[10px]" : "text-xs"}`} style={{ color: "var(--fg-muted)" }}>
+            <span className="text-xs line-through" style={{ color: "var(--fg-muted)" }}>
               ${Number(product.price).toFixed(2)}
             </span>
           </div>

@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import toast from "react-hot-toast";
 import { storage } from "@/lib/firebase";
 import type { Product, Category } from "@/lib/products";
 
@@ -121,22 +122,18 @@ export default function ProductForm({ product, categories, token, onSave, onCanc
       );
       if (!res.ok) throw new Error("Error al guardar");
 
-      // Eliminar de Firebase Storage las imágenes que se quitaron
       await Promise.allSettled(
         removedImages.map(async (url) => {
-          try {
-            const fileRef = ref(storage, url);
-            await deleteObject(fileRef);
-          } catch {
-            // Si la imagen ya no existe en Storage se ignora el error
-          }
+          try { await deleteObject(ref(storage, url)); } catch { /* ignorado */ }
         })
       );
 
+      toast.success(product ? "Producto actualizado" : "Producto creado");
       onSave();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
