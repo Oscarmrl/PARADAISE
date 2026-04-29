@@ -4,10 +4,12 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState, useCallback } from "react";
 import { ref, deleteObject } from "firebase/storage";
-import { signOut } from "firebase/auth";
+import { signOut, onAuthStateChanged } from "firebase/auth";
+import toast from "react-hot-toast";
 import { storage, auth } from "@/lib/firebase";
 import PasswordGate from "@/components/admin/PasswordGate";
 import ProductForm from "@/components/admin/ProductForm";
+import SiteImagesPanel from "@/components/admin/SiteImagesPanel";
 import type { Product, Category } from "@/lib/products";
 
 function slugify(t: string) {
@@ -26,19 +28,37 @@ export default function AdminPage() {
   const [catSaving, setCatSaving] = useState(false);
   const [catError, setCatError] = useState("");
   const [showCats, setShowCats] = useState(false);
+  const [showImages, setShowImages] = useState(false);
+  const [heroImage, setHeroImage] = useState("");
 
   useEffect(() => {
     const saved = sessionStorage.getItem("admin_token");
-    if (saved) setToken(saved);
+    if (!saved) return;
+    // Espera a que Firebase Auth restaure la sesión antes de mostrar el panel
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setToken(saved);
+      } else {
+        // Sesión de Firebase expirada — pedir login de nuevo
+        sessionStorage.removeItem("admin_token");
+      }
+      unsub();
+    });
   }, []);
 
   const loadData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
-      const [pRes, cRes] = await Promise.all([fetch("/api/productos"), fetch("/api/categorias")]);
+      const [pRes, cRes, sRes] = await Promise.all([
+        fetch("/api/productos"),
+        fetch("/api/categorias"),
+        fetch("/api/settings?key=hero_image"),
+      ]);
       setProducts(await pRes.json());
       setCategories(await cRes.json());
+      const s = await sRes.json();
+      setHeroImage(s.value ?? "");
     } finally {
       setLoading(false);
     }
@@ -47,25 +67,48 @@ export default function AdminPage() {
   useEffect(() => { loadData(); }, [loadData]);
 
   async function handleDelete(id: number) {
-    if (!confirm("¿Eliminar este producto?")) return;
-
     const product = products.find((p) => p.id === id);
 
-    await fetch(`/api/productos/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
-
-    if (product?.images?.length) {
-      await Promise.allSettled(
-        product.images.map(async (url) => {
-          try {
-            await deleteObject(ref(storage, url));
-          } catch {
-            // Imagen ya inexistente en Storage, se ignora
-          }
-        })
-      );
-    }
-
-    loadData();
+    toast((t) => (
+      <div className="flex flex-col gap-2">
+        <p className="text-sm font-medium">¿Eliminar <strong>{product?.name}</strong>?</p>
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              await toast.promise(
+                (async () => {
+                  await fetch(`/api/productos/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+                  if (product?.images?.length) {
+                    await Promise.allSettled(
+                      product.images.map(async (url) => {
+                        try { await deleteObject(ref(storage, url)); } catch { /* ignorado */ }
+                      })
+                    );
+                  }
+                  loadData();
+                })(),
+                {
+                  loading: "Eliminando...",
+                  success: "Producto eliminado",
+                  error: "Error al eliminar",
+                }
+              );
+            }}
+            className="px-3 py-1 text-xs text-white rounded-sm"
+            style={{ backgroundColor: "#c0392b" }}
+          >
+            Eliminar
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1 text-xs border rounded-sm"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    ), { duration: Infinity });
   }
 
   async function handleCreateCategory(e: React.FormEvent) {
@@ -82,17 +125,49 @@ export default function AdminPage() {
       setCatName("");
       setCatSlug("");
       loadData();
+      toast.success(`Categoría "${catName}" creada`);
     } catch (err) {
-      setCatError(err instanceof Error ? err.message : String(err));
+      const msg = err instanceof Error ? err.message : String(err);
+      setCatError(msg);
+      toast.error(msg);
     } finally {
       setCatSaving(false);
     }
   }
 
   async function handleDeleteCategory(id: number, name: string) {
-    if (!confirm(`¿Eliminar la categoría "${name}"? Los productos asociados quedarán sin categoría.`)) return;
-    await fetch(`/api/categorias?id=${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
-    loadData();
+    toast((t) => (
+      <div className="flex flex-col gap-2">
+        <p className="text-sm font-medium">¿Eliminar categoría <strong>{name}</strong>?</p>
+        <p className="text-xs" style={{ color: "#9c8a7a" }}>Los productos asociados quedarán sin categoría.</p>
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              toast.dismiss(t.id);
+              await toast.promise(
+                fetch(`/api/categorias?id=${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } })
+                  .then(() => loadData()),
+                {
+                  loading: "Eliminando...",
+                  success: "Categoría eliminada",
+                  error: "Error al eliminar",
+                }
+              );
+            }}
+            className="px-3 py-1 text-xs text-white rounded-sm"
+            style={{ backgroundColor: "#c0392b" }}
+          >
+            Eliminar
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1 text-xs border rounded-sm"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    ), { duration: Infinity });
   }
 
   if (!token) return <PasswordGate onSuccess={(t) => setToken(t)} />;
@@ -116,6 +191,9 @@ export default function AdminPage() {
           </button>
           <button onClick={() => setShowCats((v) => !v)} className="btn-outline px-5 py-2.5 text-xs">
             Categorías
+          </button>
+          <button onClick={() => setShowImages((v) => !v)} className="btn-outline px-5 py-2.5 text-xs">
+            Imágenes
           </button>
           <button
             onClick={() => { sessionStorage.removeItem("admin_token"); signOut(auth); setToken(null); }}
@@ -168,6 +246,16 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Sección Imágenes del sitio ── */}
+      {showImages && (
+        <SiteImagesPanel
+          token={token}
+          heroImage={heroImage}
+          categories={categories}
+          onUpdate={loadData}
+        />
       )}
 
       {/* ── Sección Categorías ── */}

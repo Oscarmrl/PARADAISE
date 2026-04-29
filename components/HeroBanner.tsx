@@ -1,11 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getSetting } from "@/lib/settings";
 
-export default function HeroBanner() {
+const DEFAULT_HERO = "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1920&q=85&auto=format&fit=crop";
+
+export default async function HeroBanner() {
+  const heroImage = await getSetting("hero_image") ?? DEFAULT_HERO;
+
   return (
     <section className="relative w-full h-[85vh] min-h-[500px] overflow-hidden">
       <Image
-        src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1920&q=85&auto=format&fit=crop"
+        src={heroImage}
         alt="Nueva Colección PARADISE"
         fill
         priority

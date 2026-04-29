@@ -44,6 +44,18 @@ export async function createCategory(
   return rows[0];
 }
 
+export async function updateCategory(id: number, data: Partial<Omit<Category, "id">>): Promise<Category | null> {
+  const fields = Object.keys(data) as (keyof typeof data)[];
+  if (fields.length === 0) return null;
+  const sets = fields.map((f, i) => `${f} = $${i + 2}`).join(", ");
+  const values = fields.map((f) => data[f]);
+  const { rows } = await pool.query<Category>(
+    `UPDATE categories SET ${sets} WHERE id = $1 RETURNING *`,
+    [id, ...values]
+  );
+  return rows[0] ?? null;
+}
+
 export async function deleteCategory(id: number): Promise<boolean> {
   const { rowCount } = await pool.query(
     "DELETE FROM categories WHERE id = $1",

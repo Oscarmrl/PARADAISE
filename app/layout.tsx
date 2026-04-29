@@ -6,6 +6,7 @@ import CartDrawer from "@/components/CartDrawer";
 import Footer from "@/components/Footer";
 import ThemeProvider from "@/components/ThemeProvider";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import { Toaster } from "react-hot-toast";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-display",
@@ -37,6 +38,18 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
           <WhatsAppButton />
+          <Toaster
+            position="bottom-center"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                fontFamily: "var(--font-body)",
+                fontSize: "13px",
+                borderRadius: "2px",
+                padding: "12px 16px",
+              },
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>

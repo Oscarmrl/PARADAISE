@@ -6,7 +6,11 @@ export default async function CategoryGrid() {
   const categories = await getCategories();
   if (categories.length === 0) return null;
 
-  const [c0, c1, c2, c3] = categories; // Vestidos, Abrigos, Blusas, Accesorios
+  // Orden DB (alfabético): Accesorios[0], Abrigos[1], Blusas[2], Vestidos[3]
+  const c0 = categories[3]; // Vestidos   → columna izquierda alta
+  const c1 = categories[0]; // Accesorios → arriba centro
+  const c2 = categories[2]; // Blusas     → arriba derecha
+  const c3 = categories[1]; // Abrigos    → franja inferior ancha
 
   return (
     <section className="w-full">

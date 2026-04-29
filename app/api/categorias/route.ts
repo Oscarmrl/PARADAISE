@@ -1,4 +1,4 @@
-import { getCategories, createCategory, deleteCategory } from "@/lib/products";
+import { getCategories, createCategory, updateCategory, deleteCategory } from "@/lib/products";
 import { NextRequest } from "next/server";
 
 export async function GET() {
@@ -23,6 +23,21 @@ export async function POST(req: NextRequest) {
     return Response.json(category, { status: 201 });
   } catch (err) {
     return Response.json({ error: "Error al crear categoría", detail: String(err) }, { status: 500 });
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  if (!verifyAdmin(req)) return Response.json({ error: "No autorizado" }, { status: 401 });
+  const { searchParams } = req.nextUrl;
+  const id = Number(searchParams.get("id"));
+  if (!id) return Response.json({ error: "ID requerido" }, { status: 400 });
+  try {
+    const body = await req.json();
+    const updated = await updateCategory(id, body);
+    if (!updated) return Response.json({ error: "No encontrado" }, { status: 404 });
+    return Response.json(updated);
+  } catch (err) {
+    return Response.json({ error: "Error al actualizar", detail: String(err) }, { status: 500 });
   }
 }
 
